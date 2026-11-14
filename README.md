@@ -1,0 +1,1 @@
+curl.exe -X POST http://127.0.0.1:8017/api/v1/compare-logos -F "image_a=@C:\Users\naing\Desktop\logo-a.png" -F "image_b=@C:\Users\naing\Desktop\logo-b.png"

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic-settings
+pg8000
+qdrant-client
+open-clip-torch
+pillow
+numpy
+torch

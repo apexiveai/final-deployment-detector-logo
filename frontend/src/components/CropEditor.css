@@ -1,0 +1,166 @@
+
+.crop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(12, 25, 44, .65);
+  backdrop-filter: blur(7px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.crop-modal {
+  width: min(760px, 100%);
+  max-height: 95vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 25px 90px rgba(0,0,0,.25);
+}
+
+.crop-header {
+  padding: 23px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.crop-eyebrow {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  font-weight: 800;
+  color: #4383d7;
+}
+
+.crop-header h2 {
+  font-family: Manrope, sans-serif;
+  font-size: 19px;
+  color: #1b304d;
+  margin: 8px 0 5px;
+}
+
+.crop-header p {
+  font-size: 11px;
+  color: #8290a4;
+  margin: 0;
+}
+
+.crop-close {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f4f8;
+  color: #52647d;
+  font-size: 21px;
+}
+
+.crop-workspace {
+  height: 360px;
+  position: relative;
+  background: #111b2b;
+}
+
+.crop-controls {
+  padding: 22px 25px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 23px;
+}
+
+.crop-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crop-control-group > label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #718098;
+}
+
+.aspect-options,
+.rotation-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.aspect-options button,
+.rotation-options button {
+  border: 1px solid #e1e7ef;
+  background: #fff;
+  color: #596c85;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+
+.aspect-options button.selected {
+  color: #3478d5;
+  border-color: #80a9e4;
+  background: #edf4ff;
+}
+
+.crop-control-group input {
+  width: 100%;
+  accent-color: #397bd5;
+}
+
+.crop-footer {
+  padding: 17px 25px;
+  border-top: 1px solid #edf0f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.crop-cancel,
+.crop-apply {
+  padding: 12px 19px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.crop-cancel {
+  background: white;
+  border: 1px solid #dfe6ef;
+  color: #63738a;
+}
+
+.crop-apply {
+  background: #1c3c65;
+  border: none;
+  color: white;
+}
+
+.crop-apply:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@media(max-width: 550px) {
+  .crop-modal-overlay {
+    padding: 8px;
+  }
+
+  .crop-workspace {
+    height: 280px;
+  }
+
+  .crop-controls {
+    grid-template-columns: 1fr;
+    padding: 17px;
+  }
+
+  .crop-header,
+  .crop-footer {
+    padding: 16px;
+  }
+}
