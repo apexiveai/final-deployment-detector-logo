@@ -1,5 +1,6 @@
 import logging
 import ssl
+import threading
 
 from contextlib import asynccontextmanager
 from urllib.parse import urlparse, parse_qs, unquote
@@ -49,6 +50,10 @@ trademark_columns: set[str] = set()
 vector_engine = None
 
 vision_engine = None
+
+vector_engine_lock = threading.Lock()
+
+vision_engine_lock = threading.Lock()
 
 
 # =========================================================
@@ -281,14 +286,16 @@ def initialize_vector_engine():
 
     global vector_engine
 
-    vector_engine = VectorEngine(
+    engine = VectorEngine(
         url=settings.QDRANT_URL,
         api_key=settings.QDRANT_API_KEY,
         collection=settings.QDRANT_COLLECTION,
         dimension=settings.VECTOR_DIMENSION,
     )
 
-    vector_engine.ensure_collection()
+    engine.ensure_collection()
+
+    vector_engine = engine
 
     logger.info(
         "Qdrant connection established."
@@ -300,6 +307,32 @@ def initialize_vector_engine():
     )
 
 
+def get_vector_engine():
+
+    global vector_engine
+
+    if vector_engine is None:
+
+        with vector_engine_lock:
+
+            if vector_engine is None:
+                try:
+                    initialize_vector_engine()
+                except Exception as exc:
+                    logger.exception(
+                        "Qdrant initialization failed."
+                    )
+                    raise HTTPException(
+                        status_code=503,
+                        detail=(
+                            "Qdrant is unavailable. Check QDRANT_URL "
+                            "and QDRANT_API_KEY."
+                        ),
+                    ) from exc
+
+    return vector_engine
+
+
 # =========================================================
 # OPENCLIP INITIALIZATION
 # =========================================================
@@ -307,6 +340,8 @@ def initialize_vector_engine():
 def initialize_vision_engine():
 
     global vision_engine
+
+    from app.engines.vision_engine import VisionEngine
 
     vision_engine = VisionEngine(
         model_name=settings.CLIP_MODEL_NAME,
@@ -329,6 +364,32 @@ def initialize_vision_engine():
     )
 
 
+def get_vision_engine():
+
+    global vision_engine
+
+    if vision_engine is None:
+
+        with vision_engine_lock:
+
+            if vision_engine is None:
+                try:
+                    initialize_vision_engine()
+                except Exception as exc:
+                    logger.exception(
+                        "OpenCLIP initialization failed."
+                    )
+                    raise HTTPException(
+                        status_code=503,
+                        detail=(
+                            "OpenCLIP could not be initialized. Check the "
+                            "backend runtime and model availability."
+                        ),
+                    ) from exc
+
+    return vision_engine
+
+
 # =========================================================
 # APPLICATION LIFESPAN
 # =========================================================
@@ -345,12 +406,9 @@ async def lifespan(app: FastAPI):
 
         initialize_database()
 
-        initialize_vector_engine()
-
-        initialize_vision_engine()
-
         logger.info(
-            "All application services initialized."
+            "Application startup complete. Qdrant and vision services will "
+            "initialize on demand."
         )
 
         yield
@@ -439,20 +497,6 @@ def ensure_services_ready():
             detail="PostgreSQL is not ready.",
         )
 
-    if vector_engine is None:
-
-        raise HTTPException(
-            status_code=503,
-            detail="Qdrant Vector Engine is not ready.",
-        )
-
-    if vision_engine is None:
-
-        raise HTTPException(
-            status_code=503,
-            detail="OpenCLIP Vision Engine is not ready.",
-        )
-
 
 # =========================================================
 # IMAGE VALIDATION
@@ -493,8 +537,12 @@ async def read_image(
 
     try:
 
+        vision = await run_in_threadpool(
+            get_vision_engine
+        )
+
         await run_in_threadpool(
-            vision_engine.prepare_image,
+            vision.prepare_image,
             file_bytes,
         )
 
@@ -654,7 +702,7 @@ def health_ready():
 
         cursor.fetchone()
 
-        vector_engine.client.get_collection(
+        get_vector_engine().client.get_collection(
             settings.QDRANT_COLLECTION
         )
 
@@ -662,7 +710,7 @@ def health_ready():
             "status": "ready",
             "database": "connected",
             "vector_database": "connected",
-            "vision_engine": "initialized",
+            "vision_engine": "lazy-loaded",
             "data_policy": "REAL_DATABASE_RECORDS_ONLY",
         }
 
@@ -710,6 +758,10 @@ async def compare_logos(
 
     try:
 
+        await run_in_threadpool(
+            get_vector_engine
+        )
+
         # -------------------------------------------------
         # READ UPLOADED IMAGES
         # -------------------------------------------------
@@ -726,13 +778,17 @@ async def compare_logos(
         # GENERATE IMAGE EMBEDDINGS
         # -------------------------------------------------
 
+        vision = await run_in_threadpool(
+            get_vision_engine
+        )
+
         vector_a = await run_in_threadpool(
-            vision_engine.encode_image,
+            vision.encode_image,
             bytes_a,
         )
 
         vector_b = await run_in_threadpool(
-            vision_engine.encode_image,
+            vision.encode_image,
             bytes_b,
         )
 
@@ -740,7 +796,7 @@ async def compare_logos(
         # DIRECT IMAGE SIMILARITY
         # -------------------------------------------------
 
-        visual_similarity = vision_engine.similarity(
+        visual_similarity = vision.similarity(
             vector_a,
             vector_b,
         )

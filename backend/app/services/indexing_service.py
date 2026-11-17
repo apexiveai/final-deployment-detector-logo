@@ -82,6 +82,12 @@ class IndexingService:
                     "jurisdiction": trademark.get(
                         "jurisdiction"
                     ),
+                    "nice_classes": trademark.get(
+                        "nice_classes"
+                    ) or [],
+                    "image_url": trademark.get(
+                        "image_url"
+                    ),
                     "image_hash": result["image_hash"],
                     "model_name": self.model_name,
                 }
@@ -105,6 +111,7 @@ class IndexingService:
                     model_name=self.model_name,
                     dimension=result["dimension"],
                     image_hash=result["image_hash"],
+                    qdrant_collection=self.vector_engine.collection,
                 )
 
                 indexed += 1

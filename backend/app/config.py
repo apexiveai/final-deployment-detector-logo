@@ -26,6 +26,8 @@ class Settings:
         self.API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 
         self.DATABASE_URL = os.getenv("DATABASE_URL", "")
+        self.DATABASE_SCHEMA = os.getenv("DATABASE_SCHEMA", "public")
+        self.DATABASE_TABLE = os.getenv("DATABASE_TABLE", "trademarks")
 
         self.QDRANT_URL = os.getenv("QDRANT_URL", "")
         self.QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
@@ -36,6 +38,7 @@ class Settings:
         self.VECTOR_DIMENSION = int(
             os.getenv("VECTOR_DIMENSION", "512")
         )
+        self.SEARCH_LIMIT = int(os.getenv("SEARCH_LIMIT", "10"))
 
         self.CLIP_MODEL_NAME = os.getenv(
             "CLIP_MODEL_NAME", "ViT-B-32"

@@ -3,10 +3,6 @@ import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import "./App.css";
 import CropEditor from "./components/CropEditor";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://127.0.0.1:8017";
-
 type UploadedImage = {
   name: string;
   size: number;
@@ -22,9 +18,9 @@ type UploadCardProps = {
 };
 
 type MatchResult = {
-  id: string;
-  name: string;
-  score: number;
+  trademark_id: string;
+  name: string | null;
+  similarity_score: number;
 };
 
 type MatchSet = {
@@ -266,9 +262,9 @@ function ResultPanel({
             <small>Database matches returned</small>
             <div className="match-list">
               {(data?.results || []).slice(0, 5).map((item) => (
-                <div className="match-row" key={item.id}>
+                <div className="match-row" key={item.trademark_id}>
                   <span>{item.name}</span>
-                  <b>{item.score}%</b>
+                  <b>{item.similarity_score}%</b>
                 </div>
               ))}
               {!data?.results?.length && (
@@ -338,7 +334,7 @@ export default function App() {
       formData.append("image_b", target.original);
 
       const response = await fetch(
-        `${API_URL}/api/v1/compare-logos`,
+        "/api/v1/compare-logos",
         {
           method: "POST",
           body: formData,

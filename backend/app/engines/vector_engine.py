@@ -38,6 +38,7 @@ class VectorEngine:
             url=url,
             api_key=api_key or None,
             timeout=30,
+            check_compatibility=False,
         )
 
     def ensure_collection(self):

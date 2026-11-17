@@ -57,6 +57,8 @@ class TrademarkRepository:
                     registration_number,
                     application_number,
                     jurisdiction,
+                    nice_classes,
+                    image_url,
                     status,
                     source_name,
                     source_url,
@@ -121,10 +123,14 @@ class TrademarkRepository:
 
             cursor.execute(
                 """
-                SELECT nice_class, class_description
-                FROM public.trademark_classes
-                WHERE trademark_id = %s
-                ORDER BY nice_class
+                SELECT
+                    tc.class_number AS nice_class,
+                    COALESCE(tc.description, tc.title) AS class_description
+                FROM public.trademark_class_assignments AS assignment
+                JOIN public.trademark_classes AS tc
+                    ON tc.id = assignment.class_id
+                WHERE assignment.trademark_id = %s
+                ORDER BY tc.class_number
                 """,
                 (trademark_id,),
             )
@@ -148,6 +154,7 @@ class TrademarkRepository:
         model_name,
         dimension,
         image_hash,
+        qdrant_collection,
     ):
         connection = self.connect()
 
@@ -163,14 +170,16 @@ class TrademarkRepository:
                     model_name,
                     vector_dimension,
                     image_hash,
+                    qdrant_collection,
                     indexed_at
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (qdrant_point_id)
                 DO UPDATE SET
                     model_name = EXCLUDED.model_name,
                     vector_dimension = EXCLUDED.vector_dimension,
                     image_hash = EXCLUDED.image_hash,
+                    qdrant_collection = EXCLUDED.qdrant_collection,
                     indexed_at = NOW()
                 """,
                 (
@@ -180,6 +189,7 @@ class TrademarkRepository:
                     model_name,
                     dimension,
                     image_hash,
+                    qdrant_collection,
                 ),
             )
 

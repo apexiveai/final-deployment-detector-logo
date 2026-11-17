@@ -30,6 +30,7 @@ WORKDIR /app
 COPY requirements.txt ./requirements.txt
 
 RUN python -m pip install --upgrade pip && \
+    python -m pip install torch --index-url https://download.pytorch.org/whl/cpu && \
     python -m pip install -r requirements.txt
 
 # Copy application source
@@ -46,4 +47,4 @@ USER appuser
 EXPOSE 8081
 
 # Start FastAPI
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8081}"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8081}"]
